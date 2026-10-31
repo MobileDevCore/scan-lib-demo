@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScanMatch - Shopping List Matcher</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="brand">
+          <div class="brand-badge">⚡ C Engine + Cloud Vision</div>
+          <h1>ScanMatch Shopping List Matcher</h1>
+        </div>
+        <p class="subtitle">Gujarati • Hindi • English Shopping List Processing & Catalog Matching</p>
+      </div>
+
+      <!-- Mode Notice Banner -->
+      <div class="demo-banner banner-direct" id="modeBanner">
+        <span class="banner-icon" id="bannerIcon">✍️</span>
+        <div class="banner-text" id="bannerText">
+          <strong>Direct Text Mode:</strong> Type or paste your own shopping items directly. The C matching engine parses quantities, units, and multilingual product names with zero latency.
+        </div>
+      </div>
+    </header>
+
+    <main class="main-layout">
+      <!-- Main Input Card -->
+      <section class="card upload-card">
+        <!-- Segmented Mode Tabs -->
+        <div class="tabs-header">
+          <button type="button" class="tab-btn active" id="tabDirectText" data-tab="direct">
+            <span class="tab-icon">📝</span> Direct Text Input
+            <span class="badge-pill">Real Input</span>
+          </button>
+          <button type="button" class="tab-btn" id="tabUploadDoc" data-tab="upload">
+            <span class="tab-icon">📷</span> Document Upload (Cloud Vision)
+          </button>
+        </div>
+
+        <!-- PANEL 1: Direct Text Input -->
+        <div class="tab-panel active" id="panelDirect">
+          <p class="card-desc">Type or paste your shopping list items line by line or separated by commas. Real-time C engine matching with full support for Gujarati, Hindi, English, and Indic numerals.</p>
+
+          <!-- Quick Samples & Catalog Link -->
+          <div class="samples-row">
+            <div class="quick-samples">
+              <span class="samples-label">Quick Examples:</span>
+              <button type="button" class="chip-btn" data-sample="gujarati">🌾 Gujarati</button>
+              <button type="button" class="chip-btn" data-sample="hindi">🍚 Hindi</button>
+              <button type="button" class="chip-btn" data-sample="english">🛒 English</button>
+              <button type="button" class="chip-btn" data-sample="mixed">🌐 Mixed</button>
+            </div>
+            <button type="button" id="toggleCatalogBtn" class="catalog-toggle-btn">📋 View Catalog (35 Items)</button>
+          </div>
+
+          <!-- Catalog Drawer / Modal -->
+          <div id="catalogModal" class="catalog-modal hidden">
+            <div class="catalog-modal-header">
+              <div>
+                <h3>📦 Supported Product Catalog (35 Items)</h3>
+                <span class="catalog-subtitle">Click any item to add it to your shopping list</span>
+              </div>
+              <button type="button" id="closeCatalogBtn" class="btn-close-modal" title="Close Catalog">✕</button>
+            </div>
+            <div class="catalog-search-box">
+              <input type="text" id="catalogSearchInput" placeholder="Search catalog by English, Gujarati, or Hindi name..." class="catalog-search-input">
+            </div>
+            <div id="catalogGrid" class="catalog-grid">
+              <!-- Dynamically populated from /api/catalog -->
+            </div>
+          </div>
+
+          <form id="directTextForm" class="text-input-form">
+            <div class="textarea-wrapper">
+              <textarea
+                id="shoppingListText"
+                rows="6"
+                class="custom-textarea"
+                placeholder="Enter shopping items (one per line or comma-separated):&#10;Example:&#10;ચોખા ૫ કિલો&#10;Sugar 2 kg&#10;તેલ ૧ લિટર&#10;Salt 1 packet&#10;बादाम 250 ग्राम"
+                spellcheck="false"
+              ></textarea>
+            </div>
+
+            <div class="form-actions-split">
+              <button type="button" id="clearTextBtn" class="btn btn-secondary">
+                Clear Text
+              </button>
+              <button type="submit" id="submitTextBtn" class="btn btn-primary">
+                <span class="btn-spinner hidden" id="btnTextSpinner"></span>
+                <span id="submitTextLabel">Match Shopping List</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- PANEL 2: Document Upload (Google Cloud Vision OCR) -->
+        <div class="tab-panel" id="panelUpload">
+          <p class="card-desc">Upload a photo, scan, or PDF of a handwritten or printed shopping list. Extracted via Google Cloud Vision OCR.</p>
+
+          <!-- Cloud Vision API Key Configuration -->
+          <div class="cloud-config-box">
+            <div class="config-header">
+              <span class="config-title">🔑 Google Cloud Vision API Key</span>
+              <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" class="config-help-link">Get API Key ↗</a>
+            </div>
+            <div class="api-key-input-row">
+              <input
+                type="password"
+                id="cloudVisionApiKey"
+                placeholder="Enter your Google Cloud Vision API Key (AIzaSy...)"
+                class="api-key-input"
+                autocomplete="off"
+              >
+              <button type="button" id="toggleApiKeyBtn" class="btn-icon" title="Show / Hide Key">👁️</button>
+            </div>
+            <p class="config-hint">Your API key is securely saved in your local browser storage. You can also configure <code>GOOGLE_VISION_API_KEY</code> as a server environment variable.</p>
+          </div>
+
+          <form id="uploadForm" class="upload-form">
+            <div class="drop-zone" id="dropZone">
+              <div class="drop-zone-icon">📄</div>
+              <div class="drop-zone-prompt">
+                <strong>Drag & drop your shopping list document here</strong>
+                <span>or click to browse from your computer (.jpg, .jpeg, .png, .webp, .pdf)</span>
+              </div>
+              <input type="file" id="fileInput" name="file" accept=".jpg,.jpeg,.png,.webp,.pdf" class="file-input">
+            </div>
+
+            <div id="fileInfo" class="file-info hidden">
+              <div class="file-details">
+                <span class="file-icon">📎</span>
+                <span class="file-name" id="fileNameDisplay"></span>
+              </div>
+              <button type="button" id="clearFileBtn" class="btn-clear" title="Remove file">✕</button>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
+                <span class="btn-spinner hidden" id="btnSpinner"></span>
+                <span id="btnText">Scan with Cloud Vision & Match</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Global Error Notification -->
+        <div id="errorAlert" class="alert alert-error hidden">
+          <strong id="errorCode"></strong>: <span id="errorMessage"></span>
+        </div>
+      </section>
+
+      <!-- Results Section -->
+      <section id="resultsSection" class="results-section hidden">
+        <!-- Summary Dashboard -->
+        <div class="summary-grid">
+          <div class="summary-card card-total">
+            <div class="summary-value" id="summaryTotal">0</div>
+            <div class="summary-label">Total Items</div>
+          </div>
+          <div class="summary-card card-matched">
+            <div class="summary-value" id="summaryMatched">0</div>
+            <div class="summary-label">In Catalog</div>
+          </div>
+          <div class="summary-card card-review">
+            <div class="summary-value" id="summaryReview">0</div>
+            <div class="summary-label">Needs Review</div>
+          </div>
+          <div class="summary-card card-unidentified">
+            <div class="summary-value" id="summaryUnidentified">0</div>
+            <div class="summary-label">New / Custom Items</div>
+          </div>
+        </div>
+
+        <!-- Result Table Card -->
+        <div class="card table-card">
+          <div class="table-header">
+            <div>
+              <h2>Matched Shopping List Results</h2>
+              <p class="card-desc" id="resultSubtitle">Recognized and catalog-matched items</p>
+            </div>
+            <div class="meta-badges">
+              <div class="mode-badge" id="resultModeBadge">Direct Text</div>
+              <div class="timing-badge" id="timingBadge">0 ms</div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="result-table">
+              <thead>
+                <tr>
+                  <th>Recognized Item Text</th>
+                  <th>Catalog Product</th>
+                  <th>Qty</th>
+                  <th>Unit</th>
+                  <th>Confidence</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="resultTableBody">
+                <!-- Rows injected dynamically via app.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Raw Extracted / Input Text Details -->
+          <div class="ocr-details-card">
+            <div class="ocr-details-header">
+              <span class="ocr-details-title">📄 Processed Text</span>
+              <button type="button" id="editExtractedBtn" class="btn-sm btn-outline">✏️ Edit in Text Mode</button>
+            </div>
+            <pre id="rawOcrText" class="ocr-pre"></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      ScanMatch • Gujarati, Hindi & English Shopping List Matcher • Powered by Google Cloud Vision & libscanmatch
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
